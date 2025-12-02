@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plagiarism Checker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .text-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-input-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .text-input-group label span {
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .file-upload {
+            margin-top: 10px;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload label {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .file-upload label:hover {
+            background: #e0e0e0;
+        }
+
+        .file-name {
+            margin-left: 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .threshold-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .threshold-control label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .threshold-control input[type="range"] {
+            width: 150px;
+            cursor: pointer;
+        }
+
+        .threshold-value {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .check-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .check-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .check-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results {
+            padding: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .similarity-score {
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            transition: background 0.5s;
+        }
+
+        .score-circle.low {
+            background: linear-gradient(135deg, #00c853 0%, #69f0ae 100%);
+        }
+
+        .score-circle.medium {
+            background: linear-gradient(135deg, #ffc107 0%, #ffeb3b 100%);
+        }
+
+        .score-circle.high {
+            background: linear-gradient(135deg, #ff5722 0%, #ff8a65 100%);
+        }
+
+        .score-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .score-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+        }
+
+        .status-badge {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .status-badge.original {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-badge.plagiarized {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .algorithm-scores {
+            margin-top: 20px;
+        }
+
+        .algorithm-scores h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .score-bars {
+            display: grid;
+            gap: 12px;
+        }
+
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .score-bar-label {
+            width: 100px;
+            font-weight: 500;
+            color: #555;
+            text-transform: capitalize;
+        }
+
+        .score-bar-track {
+            flex: 1;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            transition: width 0.5s ease-out;
+        }
+
+        .score-bar-value {
+            width: 60px;
+            text-align: right;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .matching-passages {
+            margin-top: 25px;
+        }
+
+        .matching-passages h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .passage {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        .no-matches {
+            color: #4caf50;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 8px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Plagiarism Checker</h1>
+            <p>Compare two texts to detect similarity and potential plagiarism</p>
+        </header>
+
+        <div class="main-card">
+            <form id="plagiarism-form">
+                <div class="input-section">
+                    <div class="text-input-group">
+                        <label><span>1</span> Original / Source Text</label>
+                        <textarea
+                            id="text1"
+                            name="text1"
+                            placeholder="Paste the original or source text here..."
+                        ></textarea>
+                        <div class="file-upload">
+                            <input type="file" id="file1" accept=".txt,.md,.py,.js,.html,.css,.java,.cpp,.c">
+                            <label for="file1">Upload File</label>
+                            <span class="file-name" id="file1-name"></span>
+                        </div>
+                    </div>
+
+                    <div class="text-input-group">
+                        <label><span>2</span> Text to Check</label>
+                        <textarea
+                            id="text2"
+                            name="text2"
+                            placeholder="Paste the text you want to check for plagiarism..."
+                        ></textarea>
+                        <div class="file-upload">
+                            <input type="file" id="file2" accept=".txt,.md,.py,.js,.html,.css,.java,.cpp,.c">
+                            <label for="file2">Upload File</label>
+                            <span class="file-name" id="file2-name"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="threshold-control">
+                        <label>Plagiarism Threshold:</label>
+                        <input
+                            type="range"
+                            id="threshold"
+                            name="threshold"
+                            min="0"
+                            max="100"
+                            value="30"
+                        >
+                        <span class="threshold-value" id="threshold-display">30%</span>
+                    </div>
+                    <button type="submit" class="check-btn" id="check-btn">
+                        Check for Plagiarism
+                    </button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing texts...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="results" id="results">
+                <div class="result-header">
+                    <div class="similarity-score">
+                        <div class="score-circle" id="score-circle">
+                            <span class="score-value" id="score-value">0%</span>
+                            <span class="score-label">Similarity</span>
+                        </div>
+                    </div>
+                    <div class="status-badge" id="status-badge">Original</div>
+                </div>
+
+                <div class="algorithm-scores">
+                    <h3>Algorithm Breakdown</h3>
+                    <div class="score-bars" id="score-bars"></div>
+                </div>
+
+                <div class="matching-passages">
+                    <h3>Matching Passages</h3>
+                    <div id="passages-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Plagiarism Checker v1.0 - Using multiple algorithms for accurate detection</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM Elements
+        const form = document.getElementById('plagiarism-form');
+        const text1 = document.getElementById('text1');
+        const text2 = document.getElementById('text2');
+        const file1Input = document.getElementById('file1');
+        const file2Input = document.getElementById('file2');
+        const file1Name = document.getElementById('file1-name');
+        const file2Name = document.getElementById('file2-name');
+        const thresholdInput = document.getElementById('threshold');
+        const thresholdDisplay = document.getElementById('threshold-display');
+        const checkBtn = document.getElementById('check-btn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+        const scoreCircle = document.getElementById('score-circle');
+        const scoreValue = document.getElementById('score-value');
+        const statusBadge = document.getElementById('status-badge');
+        const scoreBars = document.getElementById('score-bars');
+        const passagesContainer = document.getElementById('passages-container');
+
+        // Update threshold display
+        thresholdInput.addEventListener('input', () => {
+            thresholdDisplay.textContent = thresholdInput.value + '%';
+        });
+
+        // File upload handlers
+        file1Input.addEventListener('change', async (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                file1Name.textContent = file.name;
+                text1.value = await file.text();
+            }
+        });
+
+        file2Input.addEventListener('change', async (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                file2Name.textContent = file.name;
+                text2.value = await file.text();
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const t1 = text1.value.trim();
+            const t2 = text2.value.trim();
+
+            if (!t1 || !t2) {
+                showError('Please enter both texts to compare.');
+                return;
+            }
+
+            // Show loading
+            loading.classList.add('show');
+            results.classList.remove('show');
+            error.classList.remove('show');
+            checkBtn.disabled = true;
+
+            try {
+                const response = await fetch('/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text1: t1,
+                        text2: t2,
+                        threshold: thresholdInput.value / 100
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                displayResults(data.result);
+
+            } catch (err) {
+                showError('An error occurred. Please try again.');
+            } finally {
+                loading.classList.remove('show');
+                checkBtn.disabled = false;
+            }
+        });
+
+        function showError(message) {
+            error.textContent = message;
+            error.classList.add('show');
+        }
+
+        function displayResults(result) {
+            results.classList.add('show');
+
+            // Update score circle
+            const score = result.similarity_score;
+            scoreValue.textContent = score.toFixed(1) + '%';
+
+            scoreCircle.classList.remove('low', 'medium', 'high');
+            if (score < 30) {
+                scoreCircle.classList.add('low');
+            } else if (score < 60) {
+                scoreCircle.classList.add('medium');
+            } else {
+                scoreCircle.classList.add('high');
+            }
+
+            // Update status badge
+            statusBadge.classList.remove('original', 'plagiarized');
+            if (result.is_plagiarized) {
+                statusBadge.textContent = 'Potential Plagiarism Detected';
+                statusBadge.classList.add('plagiarized');
+            } else {
+                statusBadge.textContent = 'Appears Original';
+                statusBadge.classList.add('original');
+            }
+
+            // Display algorithm scores
+            scoreBars.innerHTML = '';
+            for (const [algo, score] of Object.entries(result.algorithm_scores)) {
+                const bar = document.createElement('div');
+                bar.className = 'score-bar';
+                bar.innerHTML = `
+                    <span class="score-bar-label">${algo}</span>
+                    <div class="score-bar-track">
+                        <div class="score-bar-fill" style="width: ${score}%"></div>
+                    </div>
+                    <span class="score-bar-value">${score.toFixed(1)}%</span>
+                `;
+                scoreBars.appendChild(bar);
+            }
+
+            // Display matching passages
+            passagesContainer.innerHTML = '';
+            if (result.matching_passages && result.matching_passages.length > 0) {
+                result.matching_passages.forEach(passage => {
+                    const div = document.createElement('div');
+                    div.className = 'passage';
+                    div.textContent = '"' + passage.text + '"';
+                    passagesContainer.appendChild(div);
+                });
+            } else {
+                passagesContainer.innerHTML = '<div class="no-matches">No significant matching passages found.</div>';
+            }
+        }
+    </script>
+</body>
+</html>
