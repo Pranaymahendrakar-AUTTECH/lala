@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bld-furnace-model"
+version = "1.0.0"
+description = "Burden Layer Distribution / Rotating Chute blast-furnace screening model"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[project.scripts]
+bld-furnace = "bld_furnace_model.cli:main"
+
+[tool.setuptools]
+packages = ["bld_furnace_model"]
