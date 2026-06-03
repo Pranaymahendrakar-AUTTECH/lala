@@ -18,3 +18,9 @@ bld-furnace = "bld_furnace_model.cli:main"
 
 [tool.setuptools]
 packages = ["bld_furnace_model"]
+
+[tool.pytest.ini_options]
+# Add the project root to sys.path so `from bld_furnace_model import ...`
+# works without installing the package (pytest >= 7).
+pythonpath = ["."]
+testpaths = ["tests"]
